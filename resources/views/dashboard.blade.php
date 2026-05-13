@@ -3,8 +3,16 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4">
-    <div class="bg-white rounded-lg shadow-md p-6">
+<div class="max-w-7xl mx-auto px-4 flex ">
+    <div class="bg-gray-100 p-4 bg-red-500 w-1/6">
+        <h3 class="font-semibold text-lg mb-2">Navigation</h3>
+        <ul>
+            <li><a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">Dashboard</a></li>
+            <li><a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">Profile</a></li>
+            <li><a href="{{ route('dashboard') }}" class="text-blue-600 hover:text-blue-800">Settings</a></li>
+        </ul>
+    </div>
+    <div class="bg-white shadow-md p-6 w-5/6">
         <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
         
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">

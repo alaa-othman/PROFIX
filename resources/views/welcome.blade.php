@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-4xl mx-auto px-4 text-center">
     <div class="bg-white rounded-lg shadow-md p-8">
-        <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome to PROFIX</h1>
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome To PROFIX</h1>
         <p class="text-gray-600 mb-8">We are fixing your car wherever you are.</p>
         
         @guest
