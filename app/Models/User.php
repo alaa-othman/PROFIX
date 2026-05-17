@@ -67,4 +67,12 @@ class User extends Authenticatable
     {
         return $this->role === 'accountant';
     }
+    public function getMyVehicles()
+    {
+        return $this->hasMany(Vehicle::class, 'user_owned_id');
+    }
+    public function countMyVehicles()
+    {
+        return $this->vehicles()->count();
+    }
 }
