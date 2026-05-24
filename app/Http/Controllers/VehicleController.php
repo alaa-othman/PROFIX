@@ -14,9 +14,17 @@ class VehicleController extends Controller
      */ 
     public function index()
     {
-        // Return All Vehicles with their owners in a view
-        $vehicles = Vehicle::with('owner')->get();
+        $vehicles = Vehicle::with('owner')->latest()->paginate(10);
         return view('vehicles.index', compact('vehicles'));
+    }
+
+    /**
+     * Show the form for creating a new vehicle.
+     */
+    public function createForm()
+    {
+        $users = User::all();
+        return view('vehicles.create', compact('users'));
     }
 
     /**
@@ -55,12 +63,34 @@ class VehicleController extends Controller
             ], 500);
         }
     }
+
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'type' => 'required|string|max:50',
+            'color' => 'required|string|max:50',
+            'model' => 'required|string|max:10',
+            'user_owned_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            Vehicle::create($request->all());
+            return redirect()->route('vehicles.index')
+                ->with('success', 'Vehicle created successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to create vehicle: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -68,7 +98,28 @@ class VehicleController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $vehicle = Vehicle::with('owner')->findOrFail($id);
+            return view('vehicles.show', compact('vehicle'));
+        } catch (\Exception $e) {
+            return redirect()->route('vehicles.index')
+                ->with('error', 'Vehicle not found!');
+        }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        try {
+            $vehicle = Vehicle::findOrFail($id);
+            $users = User::all();
+            return view('vehicles.edit', compact('vehicle', 'users'));
+        } catch (\Exception $e) {
+            return redirect()->route('vehicles.index')
+                ->with('error', 'Vehicle not found!');
+        }
     }
 
     /**
@@ -82,147 +133,76 @@ class VehicleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request,int $id)
+    public function update(Request $request, int $id)
     {
         try {
-            $vehicle = Vehicle::find($id);
-            
-            if (!$vehicle) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vehicle not found'
-                ], 404);
-            }
+            $vehicle = Vehicle::findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'type' => 'sometimes|required|string|max:50',
-                'color' => 'sometimes|required|string|max:50',
-                'model' => 'sometimes|required|string|max:10',
-                'user_owned_id' => 'sometimes|required|exists:users,id',
+                'type' => 'required|string|max:50',
+                'color' => 'required|string|max:50',
+                'model' => 'required|string|max:10',
+                'user_owned_id' => 'required|exists:users,id',
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
+                return redirect()->back()
+                    ->withErrors($validator)
+                    ->withInput();
             }
 
             $vehicle->update($request->all());
-
-            return response()->json([
-                'success' => true,
-                'data' => $vehicle->load('owner'),
-                'message' => 'Vehicle updated successfully'
-            ], 200);
+            return redirect()->route('vehicles.index')
+                ->with('success', 'Vehicle updated successfully!');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update vehicle',
-                'error' => $e->getMessage()
-            ], 500);
+            return redirect()->back()
+                ->with('error', 'Failed to update vehicle: ' . $e->getMessage())
+                ->withInput();
         }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-        public function destroy(int $id)
+    public function destroy(int $id)
     {
         try {
-            $vehicle = Vehicle::find($id);
-            
-            if (!$vehicle) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vehicle not found'
-                ], 404);
-            }
-
+            $vehicle = Vehicle::findOrFail($id);
             $vehicle->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Vehicle deleted successfully'
-            ], 200);
+            return redirect()->route('vehicles.index')
+                ->with('success', 'Vehicle deleted successfully!');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete vehicle',
-                'error' => $e->getMessage()
-            ], 500);
+            return redirect()->route('vehicles.index')
+                ->with('error', 'Failed to delete vehicle: ' . $e->getMessage());
         }
     }
+
     /**
-     * Get Vehicles By Type.
+     * Display vehicles by type.
      */
-    public function getByType(string $type)
+    public function showByType(string $type)
     {
-        try {
-            $vehicles = Vehicle::where('type', $type)->with('owner')->get();
-
-            if ($vehicles->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [],
-                    'message' => 'No vehicles found with type: ' . $type
-                ], 200);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $vehicles,
-                'message' => 'Vehicles retrieved successfully'
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve vehicles',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        $vehicles = Vehicle::with('owner')
+            ->where('type', $type)
+            ->paginate(10);
+        
+        return view('vehicles.by-type', compact('vehicles', 'type'));
     }
     /**
      * Get vehicles by owner
      */
-    public function getByOwner(int $userId) // id of owner
+     public function showByOwner(int $userId)
     {
         try {
-            $user = User::find($userId);
-            
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
-            }
-
+            $user = User::findOrFail($userId);
             $vehicles = Vehicle::with('owner')
                 ->where('user_owned_id', $userId)
-                ->get();
+                ->paginate(10);
             
-            if ($vehicles->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [],
-                    'owner' => $user->first_name . ' ' . $user->last_name,
-                    'message' => 'User with id ' . $userId . ' has no vehicles'
-                ], 200);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => $vehicles,
-                'owner' => $user->first_name . ' ' . $user->last_name,
-                'message' => 'Vehicles retrieved successfully by owner'
-            ], 200);
+            return view('vehicles.by-owner', compact('vehicles', 'user'));
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve vehicles',
-                'error' => $e->getMessage()
-            ], 500);
+            return redirect()->route('vehicles.index')
+                ->with('error', 'User not found!');
         }
     }
 }

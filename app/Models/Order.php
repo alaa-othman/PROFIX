@@ -26,7 +26,6 @@ class Order extends Model
         'payment_status',
         'total_amount',
         'description',
-        'received_at',
         'start_at',
         'end_at'
     ];

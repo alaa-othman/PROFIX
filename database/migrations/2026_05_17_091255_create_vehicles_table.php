@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('type', 50);
             $table->string('color', 50);
-            $table->string('model', 10);
+            $table->string('model', 50);
             $table->foreignId('user_owned_id')->constrained('users')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

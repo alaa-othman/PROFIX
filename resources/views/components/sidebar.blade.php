@@ -1,10 +1,12 @@
 @php 
     $userRole = Auth::user()->role ?? 'customer';
     $menuItemsForAll = [
-        ['name' => 'Dashboard', 'route' => 'dashboard', 'icon' => 'home'],
-        ['name' => 'Profile', 'route' => 'register', 'icon' => 'user'],
-        ['name' => 'History', 'route' => 'dashboard', 'icon' => 'file-text'],
+        ['name' => 'Send Order', 'route' => 'orders.create', 'icon' => 'home'],
+        ['name' => 'Orders', 'route' => 'orders.index', 'icon' => 'home'],
+        ['name' => 'Add Vehicle', 'route' => 'vehicles.create', 'icon' => 'home'],
+        ['name' => 'Vehicles', 'route' => 'vehicles.index', 'icon' => 'home'],
     ];
+    $menuItemsNew = [];
 
     if ($userRole === 'admin') {
         $menuItemsNew = [
@@ -19,7 +21,7 @@
     $menuItems = array_merge($menuItemsNew, $menuItemsForAll);
 @endphp
 
-<aside class="w-64 bg-gray-900 text-white flex flex-col">
+<aside class="w-64 bg-gray-900 text-white flex flex-col min-h-screen">
     <!-- Logo/Brand -->
     <div class="p-6 border-b border-gray-800">
         <h2 class="text-2xl font-bold text-white">P R O F I X</h2>
